@@ -14,6 +14,10 @@ app.get("/", (req, res) => {
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 })
+//response can contain HTML code, in browser we only see Hello World, in terminal with cURL we see the whole string in html context
+app.get("/hello", (req, res) => {
+  res.send("<html><body>Hello <b>World</b></body></html>\n");
+});
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
