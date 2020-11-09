@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 
+app.set("view engine", "ejs");
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -14,7 +16,7 @@ app.get("/", (req, res) => {
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 })
-//response can contain HTML code, in browser we only see Hello World, in terminal with cURL we see the whole string in html context
+//response can contain HTML code, in browser we only see Hello World, in terminal with cURL we see the entrie HTTP response string in html context
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
