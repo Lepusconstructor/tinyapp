@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Lepusconstructor/tinyapp/issues"
   },
-  "homepage": "https://github.com/Lepusconstructor/tinyapp#readme"
+  "homepage": "https://github.com/Lepusconstructor/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
