@@ -39,6 +39,11 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+app.get("/urls/:shortURL", (req, res) => {
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] }; 
+  res.render("urls_show", templateVars);
+});
+
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString(6); //generate a unique 6 digits string for shortURL
   urlDatabase[shortURL] = req.body.longURL; //assign the shortURL to longURL to save the pair to urlDB
@@ -48,6 +53,12 @@ app.post("/urls", (req, res) => {
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
+  res.redirect("/urls");
+});
+
+app.post("/urls/:shortURL", (req,res)=>{
+  let longURL = req.body.updatedLongURL;
+  urlDatabase[req.params.shortURL] = longURL;
   res.redirect("/urls");
 });
 //after the browser receives a redirection res, it GET req to the url in the res.
