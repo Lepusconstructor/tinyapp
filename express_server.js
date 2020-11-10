@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');//convert req body from a Buffer to re
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 
-function generateRandomString() { //from stackoverflow
+function generateRandomString(length) { //from stackoverflow
     var result = '';
     var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     var charactersLength = characters.length;
@@ -39,8 +39,9 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 app.post("/urls", (req, res) => {
-  console.log(req.body);
-  res.send("OK");
+  const shortURL = generateRandomString(6); //generate a unique 6 digits string for shortURL
+  urlDatabase[shortURL] = req.body.longURL; //assign the shortURL to longURL to save the pair to urlDB
+  res.redirect("/urls/" + shortURL);
 });
 //The order of route definitions matters! The GET /urls/new route needs to be defined before the GET /urls/:id route. Routes defined earlier will take precedence, so if we place this route after the /urls/:id definition, any calls to /urls/new will be handled by app.get("/urls/:id", ...) because Express will think that new is a route parameter. A good rule of thumb to follow is that routes should be ordered from most specific to least specific.
 app.get("/urls/:shortURL", (req, res) => {
