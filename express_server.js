@@ -1,10 +1,12 @@
 const PORT = 8080;
 const express = require("express");
 const app = express();
+const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');//convert req body from a Buffer to readable string, then add data to the  req obj under the key body
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
 
 function generateRandomString(length) { //from stackoverflow
     var result = '';
@@ -25,29 +27,34 @@ const urlDatabase = {
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
-//adding additional endpoints
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-})
+
 //pass URL data to template urls_index.js using res.render
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { 
+    urls: urlDatabase,
+    username: req.cookies["username"]
+   };
   res.render("urls_index", templateVars);
 });
 //a GET route to render the urls_new.ejs template (given below) in the browser, to present the form to the user
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = { 
+    username: req.cookies["username"]
+   };
+    res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] }; 
+  const templateVars = {
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL],
+    username: req.cookies["username"] }; 
   res.render("urls_show", templateVars);
 });
-
-app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString(6); //generate a unique 6 digits string for shortURL
-  urlDatabase[shortURL] = req.body.longURL; //assign the shortURL to longURL to save the pair to urlDB
-  res.redirect("/urls/" + shortURL);
+app.post("/urls/:shortURL", (req,res)=>{
+  let longURL = req.body.updatedLongURL;
+  urlDatabase[req.params.shortURL] = longURL;
+  res.redirect("/urls");
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -56,11 +63,15 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-app.post("/urls/:shortURL", (req,res)=>{
-  let longURL = req.body.updatedLongURL;
-  urlDatabase[req.params.shortURL] = longURL;
-  res.redirect("/urls");
+app.post("/urls", (req, res) => {
+  const shortURL = generateRandomString(6); //generate a unique 6 digits string for shortURL
+  urlDatabase[shortURL] = req.body.longURL; //assign the shortURL to longURL to save the pair to urlDB
+  res.redirect("/urls/" + shortURL);
 });
+
+
+
+
 //after the browser receives a redirection res, it GET req to the url in the res.
 //The order of route definitions matters! The GET /urls/new route needs to be defined before the GET /urls/:id route. Routes defined earlier will take precedence, so if we place this route after the /urls/:id definition, any calls to /urls/new will be handled by app.get("/urls/:id", ...) because Express will think that new is a route parameter. A good rule of thumb to follow is that routes should be ordered from most specific to least specific.
 app.get("/u/:shortURL", (req, res) => {
@@ -68,8 +79,15 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+app.post("/login", (req, res) => {
+  res.cookie("username", req.body.username);
+  res.redirect("/urls");
+})
 
-
+app.post("/logout", (req, res) => {
+  res.clearCookie("username");
+  res.redirect("/urls");
+})
 //response can contain HTML code, in browser we only see Hello World, in terminal with cURL we see the entrie HTTP response string in html context
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
