@@ -32,23 +32,33 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = { 
     urls: urlDatabase,
-    username: req.cookies["username"]
+    user: users[req.cookies["user_id"]]? users[req.cookies["user_id"]].email : undefined
+   
    };
-  res.render("urls_index", templateVars);
+  res.render("urls_index", templateVars);//header has access to index
 });
 //a GET route to render the urls_new.ejs template (given below) in the browser, to present the form to the user
 app.get("/urls/new", (req, res) => {
   const templateVars = { 
-    username: req.cookies["username"]
+    urls: urlDatabase,
+    user: users[req.cookies["user_id"]]? users[req.cookies["user_id"]].email : undefined
+   
    };
     res.render("urls_new", templateVars);
+});
+
+app.get("/register", (req, res) => {
+  const templateVars = { 
+    user: users[req.cookies["user_id"]]
+   };
+    res.render("register", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    username: req.cookies["username"] }; 
+    user: users[req.cookies["user_id"]] }; 
   res.render("urls_show", templateVars);
 });
 app.post("/urls/:shortURL", (req,res)=>{
@@ -79,15 +89,85 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+
+app.get("/login", (req, res) => {
+  const templateVars = { 
+    user: users[req.cookies["user_id"]]
+   };
+  res.render("login", templateVars);
+})
+
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
-  res.redirect("/urls");
+  
+  const email = req.body.email;
+  const pass = req.body.password;
+  const user = fetchUser(users, email);
+ 
+  if (user && user.password === pass) {
+    res.cookie("user_id", user["user_id"]);
+    res.redirect("/urls");
+  } else {
+    return res.sendStatus('403');
+  }
+  
 })
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect("/urls");
 })
+
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
+
+const fetchUser = (db, email) => {
+  for (let user in db) {
+    if (db[user].email === email) {
+      return db[user];
+    }
+  }
+  return null;
+}
+
+
+app.get("/register", (req, res) => {
+   res.render("register");
+})
+
+
+app.post("/register", (req, res) => {
+  let user_id = generateRandomString(12);
+  const {email, password} = req.body;
+
+   //if fetchUser has error meaning the email doesn't match the existing or is empty
+   const fetchedUser = fetchUser(users, email);//shall return the userobj or null
+   if(req.body.email === "" || req.body.password === "") {
+     return res.sendStatus('400');
+   } else if (!fetchedUser) {
+     const newUser = {
+     user_id,
+     email,
+     password
+     }
+      users[user_id] = newUser;
+      res.cookie("user_id", user_id);
+      res.redirect("/urls");
+    } else {
+      return res.sendStatus('400');
+       
+    } 
+   }
+)
 //response can contain HTML code, in browser we only see Hello World, in terminal with cURL we see the entrie HTTP response string in html context
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
