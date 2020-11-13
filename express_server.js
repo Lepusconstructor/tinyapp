@@ -24,6 +24,7 @@ const fetchUserById = (db, userId) => {
   }
   return null;
 }
+
 //HELPER FUNCTION
 const fetchUserByEmail = (db, email) => {
   for (let user in db) {
@@ -33,6 +34,7 @@ const fetchUserByEmail = (db, email) => {
   }
   return null;
 }
+
 //HELPER FUNCTION
 function generateRandomString(length) { //from stackoverflow
     var result = '';
@@ -44,6 +46,7 @@ function generateRandomString(length) { //from stackoverflow
     }
     return result;
 }
+
 //HELPER FUNCTION
 const urlsForUser = (urlDatabase, id) => {
   let userUrls = {};
@@ -68,13 +71,14 @@ const users = {
     password: "9"
   }
 }
+
 //DB
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "user2RandomID" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
-//HOME 
+//GREET 
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -122,6 +126,7 @@ app.get("/urls/:shortURL", (req, res) => {
     res.redirect("login");
   }
 });
+
 //EDIT 
 app.post("/urls/:shortURL", (req,res) => {
   const user = users[req.cookies["user_id"]] ? users[req.cookies["user_id"]] : null;
@@ -159,6 +164,7 @@ app.get("/login", (req, res) => {
    };
   res.render("login", templateVars);
 })
+
 //LOGIN
 app.post("/login", (req, res) => {
   const email = req.body.email;
@@ -185,6 +191,7 @@ app.get("/register", (req, res) => {
    };
     res.render("register", templateVars);
 });
+
 //REGISTER
 app.post("/register", (req, res) => {
   let id = generateRandomString(12);
