@@ -7,7 +7,7 @@ const cookieSession = require('cookie-session');
 const saltRounds = 10;
 const {fetchUserByEmail} = require('./helpers');
 const {generateRandomString} = require('./helpers'); 
-//const {urlsForUser} = require('./helpers'); 
+const {urlsForUser} = require('./helpers'); 
 const {emailPasswordCheck} = require('./helpers');
 const bodyParser = require('body-parser');
 //convert req body from a Buffer to readable string, then add data to the  req obj under the key body
@@ -23,20 +23,7 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-const urlsForUser = (db, id) => {
-  let userUrls = {};
-  console.log(db,id);
-  for (let key in db) {
-    if (db[key].userID === id) {
-      userUrls[key] = {
-        longURL: db[key].longURL,
-        userID: id
-    }
-  }
-}
 
-  return userUrls;
-}
 
 //DB
 const users = { 

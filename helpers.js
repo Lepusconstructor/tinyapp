@@ -26,7 +26,20 @@ function generateRandomString(length) { //from stackoverflow
 }
 
 //HELPER FUNCTION
+const urlsForUser = (db, id) => {
+  let userUrls = {};
+  console.log(db,id);
+  for (let key in db) {
+    if (db[key].userID === id) {
+      userUrls[key] = {
+        longURL: db[key].longURL,
+        userID: id
+    }
+  }
+}
 
+  return userUrls;
+}
 
 //HELPER FUNCTION
 const emailPasswordCheck = (email, password, db) => {
@@ -39,5 +52,5 @@ const emailPasswordCheck = (email, password, db) => {
   }
   return answer;
 }
-//urlsForUser
-module.exports = {fetchUserByEmail, generateRandomString, emailPasswordCheck};
+
+module.exports = {fetchUserByEmail, generateRandomString, emailPasswordCheck, urlsForUser};
