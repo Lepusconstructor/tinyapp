@@ -3,7 +3,8 @@ const express = require("express");
 const app = express();
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
-const bodyParser = require('body-parser');//convert req body from a Buffer to readable string, then add data to the  req obj under the key body
+const bodyParser = require('body-parser');
+//convert req body from a Buffer to readable string, then add data to the  req obj under the key body
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
@@ -20,6 +21,7 @@ const fetchUserById = (db, userId) => {
   return null;
 }
 
+
 const fetchUserByEmail = (db, email) => {
   for (let user in db) {
     if (db[user].email === email) {
@@ -28,6 +30,7 @@ const fetchUserByEmail = (db, email) => {
   }
   return null;
 }
+
 
 function generateRandomString(length) { //from stackoverflow
     var result = '';
@@ -39,6 +42,18 @@ function generateRandomString(length) { //from stackoverflow
     }
     return result;
 }
+
+
+const urlsForUser = (urlDatabase, id) => {
+  let userUrls = {};
+  for (let key in urlDatabase) {
+    if (urlDatabase[key]["userID"] === id) {
+      userUrls[key] = urlDatabase[key];
+    }
+  }
+  return userUrls;
+}
+
 //DB
 const users = { 
   "userRandomID": {
@@ -58,50 +73,32 @@ const urlDatabase = {
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
+//HOME 
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
-const urlsForUser = (urlDatabase, id) => {
-  let userUrls = {};
-  for (let key in urlDatabase) {
-    if (urlDatabase[key]["userID"] === id) {
-      userUrls[key] = urlDatabase[key];
-    }
-  }
-  return userUrls;
-}
-//show the user the links that are tied to the userID
+
+//INDEX
 app.get("/urls", (req, res) => {
   let userID = req.cookies["user_id"];
   let templateVars = { 
-    urls: urlsForUser(urlDatabase,userID),
+    urls: urlsForUser(urlDatabase,userID), //show the user the links that are tied to the userID
     user: users[userID],
    };
-  res.render("urls_index", templateVars);
-  //header has access to index
+  res.render("urls_index", templateVars);//header has access to index, so what we want in header has to be passed here
 });
 app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString(6); //generate a unique 6 digits string for shortURL
-  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: req.cookies["user_id"]}; //assign the shortURL to longURL to save the pair to urlDB
-  //res.redirect("/urls/:" + shortURL);
+  const shortURL = generateRandomString(6); 
+  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: req.cookies["user_id"]}; 
   res.redirect(`/urls/${shortURL}`);
 });
-/*
-//a GET route to render the urls_new.ejs template (given below) in the browser, to present the form to the user
-app.get("/urls/new", (req, res) => {
-    const templateVars = { 
-    urls: urlDatabase,
-    user: users[req.cookies["user_id"]]? users[req.cookies["user_id"]].email : undefined
-   };
-    res.render("urls_new", templateVars);
-});
-*/
-//if user is not login, should not be able to create new shortURL
+
+//CREATE NEW URL
 app.get("/urls/new", (req, res) => {
   const user_Id = req.cookies["user_id"];
   if (user_Id === null || user_Id === undefined) {
-    res.redirect("/login");
+    res.redirect("/login");//if user is not logged in, should not be able to create new shortURL
   } else {
   const fetchedUser = fetchUserById(users, user_Id);
   let templateVars = {
@@ -112,26 +109,31 @@ app.get("/urls/new", (req, res) => {
 });
 
 
-
+//EDIT
 app.get("/urls/:shortURL", (req, res) => {
-  
-  let shortURL = req.params.shortURL;//.substring(1)
+  let shortURL = req.params.shortURL;
   console.log(shortURL);
   const templateVars = {
     shortURL: shortURL,
     longURL: urlDatabase[shortURL].longURL,
     user: users[req.cookies["user_id"]] 
   }; 
-  
   res.render("urls_show", templateVars);
 });
 
+//EDIT
 app.post("/urls/:shortURL", (req,res)=>{
   let longURL = req.body.updatedLongURL;
   urlDatabase[req.params.shortURL].longURL = longURL;
   res.redirect("/urls");
 });
 
+app.get("/u/:shortURL", (req, res) => { //anyone can visit shorURL
+  const longURL = req.params.shortURL.longURL;
+  res.redirect(longURL);
+});
+
+//DELETE
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
@@ -139,10 +141,6 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 
-app.get("/u/:shortURL", (req, res) => { //anyone can visit shorURL
-  const longURL = req.params.shortURL.longURL;
-  res.redirect(longURL);
-});
 
 //LOGIN
 app.get("/login", (req, res) => {
