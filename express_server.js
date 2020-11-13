@@ -3,6 +3,8 @@ const express = require("express");
 const app = express();
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
+const bcrypt = require('bcrypt');
+const hashedPassword = bcrypt.hashSync(password, saltRound);
 const bodyParser = require('body-parser');
 //convert req body from a Buffer to readable string, then add data to the  req obj under the key body
 
@@ -196,20 +198,26 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   let id = generateRandomString(12);
   const {email, password} = req.body;
+  
+  if(req.body.email === "") {
+    return res.sendStatus('400').send('<html><h4>Please enter email</h4></html>');
+   } 
+  if (req.body.password === "") {
+    return res.sendStatus('400').send('<html><h4>Please enter password</h4></html>');
+  }
   const fetchedUser = fetchUserByEmail(users, email);//shall return the userobj or null
-  if(req.body.email === "" || req.body.password === "") {
-     return res.sendStatus('400');
-   } else if (!fetchedUser) {
+  if (!fetchedUser) {
      const newUser = {
      id,
      email,
-     password
+     password: bcrypt.hashSync(password, saltRound)
      }
       users[id] = newUser;
       res.cookie("user_id", id);
       res.redirect("/urls");
     } else {
-      return res.sendStatus('400');
+      res.sendStatus('400').send('<html><h4>User exists, please log in</h4></html>');
+      res.redirect("login");
     } 
    }
 )
