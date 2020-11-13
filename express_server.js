@@ -11,6 +11,10 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.use(morgan("dev"));
 
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
+
 //HELPER FUNCTION
 const fetchUserById = (db, userId) => {
   for (let user in db) {
@@ -20,8 +24,7 @@ const fetchUserById = (db, userId) => {
   }
   return null;
 }
-
-
+//HELPER FUNCTION
 const fetchUserByEmail = (db, email) => {
   for (let user in db) {
     if (db[user].email === email) {
@@ -30,8 +33,7 @@ const fetchUserByEmail = (db, email) => {
   }
   return null;
 }
-
-
+//HELPER FUNCTION
 function generateRandomString(length) { //from stackoverflow
     var result = '';
     var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -42,8 +44,7 @@ function generateRandomString(length) { //from stackoverflow
     }
     return result;
 }
-
-
+//HELPER FUNCTION
 const urlsForUser = (urlDatabase, id) => {
   let userUrls = {};
   for (let key in urlDatabase) {
@@ -67,7 +68,7 @@ const users = {
     password: "9"
   }
 }
-
+//DB
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "user2RandomID" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
@@ -77,7 +78,6 @@ const urlDatabase = {
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
-
 
 //INDEX
 app.get("/urls", (req, res) => {
@@ -108,7 +108,7 @@ app.get("/urls/new", (req, res) => {
 }
 });
 
-//EDIT only allow logged in user
+//EDIT 
 app.get("/urls/:shortURL", (req, res) => {
   const user = users[req.cookies["user_id"]] ? users[req.cookies["user_id"]] : null;
   const templateVars = {
@@ -116,14 +116,13 @@ app.get("/urls/:shortURL", (req, res) => {
     longURL: urlDatabase[req.params.shortURL].longURL,
     user: users[req.cookies["user_id"]] 
   }; 
- 
   if (user) {
     res.render("urls_show", templateVars);
   } else {
     res.redirect("login");
   }
 });
-
+//EDIT 
 app.post("/urls/:shortURL", (req,res) => {
   const user = users[req.cookies["user_id"]] ? users[req.cookies["user_id"]] : null;
   if (user) {
@@ -133,33 +132,15 @@ app.post("/urls/:shortURL", (req,res) => {
   } else {
     res.redirect("login");
   }
-
-});
-/*
-//EDIT(working)
-app.get("/urls/:shortURL", (req, res) => {
-  let shortURL = req.params.shortURL;
-  const templateVars = {
-    shortURL: shortURL,
-    longURL: urlDatabase[shortURL].longURL,
-    user: users[req.cookies["user_id"]] 
-  }; 
-  res.render("urls_show", templateVars);
 });
 
-//EDIT(working)
-app.post("/urls/:shortURL", (req,res) => {
-  let longURL = req.body.updatedLongURL;
-  urlDatabase[req.params.shortURL].longURL = longURL;
-  res.redirect("/urls");
-});
-*/
 //NOT SURE
 app.get("/u/:shortURL", (req, res) => { //anyone can visit shorURL
   const longURL = req.params.shortURL.longURL;
   res.redirect(longURL);
 });
-//DELETE only allow logged in user
+
+//DELETE 
 app.post("/urls/:shortURL/delete", (req, res) => {
   const user = users[req.cookies["user_id"]] ? users[req.cookies["user_id"]] : null;
   if (user) {
@@ -169,17 +150,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   } else {
     res.redirect("login");
   }
-
 });
-/*
-//DELETE(working)
-app.post("/urls/:shortURL/delete", (req, res) => {
-  const shortURL = req.params.shortURL;
-  delete urlDatabase[shortURL];
-  res.redirect("/urls");
-});
-*/
-
 
 //LOGIN
 app.get("/login", (req, res) => {
@@ -188,7 +159,7 @@ app.get("/login", (req, res) => {
    };
   res.render("login", templateVars);
 })
-
+//LOGIN
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const pass = req.body.password;
@@ -205,10 +176,7 @@ app.post("/login", (req, res) => {
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
   res.redirect("/urls");
-})
-
-
-
+});
 
 //REGISTER
 app.get("/register", (req, res) => {
@@ -217,7 +185,7 @@ app.get("/register", (req, res) => {
    };
     res.render("register", templateVars);
 });
-
+//REGISTER
 app.post("/register", (req, res) => {
   let id = generateRandomString(12);
   const {email, password} = req.body;
@@ -239,6 +207,3 @@ app.post("/register", (req, res) => {
    }
 )
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
