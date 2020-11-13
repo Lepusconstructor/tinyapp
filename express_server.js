@@ -108,11 +108,37 @@ app.get("/urls/new", (req, res) => {
 }
 });
 
+//EDIT only allow logged in user
+app.get("/urls/:shortURL", (req, res) => {
+  const user = users[req.cookies["user_id"]] ? users[req.cookies["user_id"]] : null;
+  const templateVars = {
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL].longURL,
+    user: users[req.cookies["user_id"]] 
+  }; 
+ 
+  if (user) {
+    res.render("urls_show", templateVars);
+  } else {
+    res.redirect("login");
+  }
+});
 
-//EDIT
+app.post("/urls/:shortURL", (req,res) => {
+  const user = users[req.cookies["user_id"]] ? users[req.cookies["user_id"]] : null;
+  if (user) {
+    let longURL = req.body.updatedLongURL;
+    urlDatabase[req.params.shortURL].longURL = longURL;
+    res.redirect("/urls");
+  } else {
+    res.redirect("login");
+  }
+
+});
+/*
+//EDIT(working)
 app.get("/urls/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL;
-  console.log(shortURL);
   const templateVars = {
     shortURL: shortURL,
     longURL: urlDatabase[shortURL].longURL,
@@ -121,25 +147,38 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-//EDIT
-app.post("/urls/:shortURL", (req,res)=>{
+//EDIT(working)
+app.post("/urls/:shortURL", (req,res) => {
   let longURL = req.body.updatedLongURL;
   urlDatabase[req.params.shortURL].longURL = longURL;
   res.redirect("/urls");
 });
-
+*/
+//NOT SURE
 app.get("/u/:shortURL", (req, res) => { //anyone can visit shorURL
   const longURL = req.params.shortURL.longURL;
   res.redirect(longURL);
 });
+//DELETE only allow logged in user
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const user = users[req.cookies["user_id"]] ? users[req.cookies["user_id"]] : null;
+  if (user) {
+    const shortURL = req.params.shortURL;
+    delete urlDatabase[shortURL];
+    res.redirect("/urls");
+  } else {
+    res.redirect("login");
+  }
 
-//DELETE
+});
+/*
+//DELETE(working)
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
   res.redirect("/urls");
 });
-
+*/
 
 
 //LOGIN
