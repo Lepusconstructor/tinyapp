@@ -5,10 +5,9 @@ const morgan = require('morgan');
 const bcrypt = require('bcrypt');
 const cookieSession = require('cookie-session');
 const saltRounds = 10;
-const {fetchUserById} = require('./helpers');
 const {fetchUserByEmail} = require('./helpers');
 const {generateRandomString} = require('./helpers'); 
-const {urlsForUser} = require('./helpers'); 
+//const {urlsForUser} = require('./helpers'); 
 const {emailPasswordCheck} = require('./helpers');
 const bodyParser = require('body-parser');
 //convert req body from a Buffer to readable string, then add data to the  req obj under the key body
@@ -24,6 +23,20 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+const urlsForUser = (db, id) => {
+  let userUrls = {};
+  console.log(db,id);
+  for (let key in db) {
+    if (db[key].userID === id) {
+      userUrls[key] = {
+        longURL: db[key].longURL,
+        userID: id
+    }
+  }
+}
+
+  return userUrls;
+}
 
 //DB
 const users = { 
@@ -57,13 +70,22 @@ app.get("/", (req, res) => {
 
 //INDEX
 app.get("/urls", (req, res) => {
+  const user = users[req.session["user_id"]] ? users[req.session["user_id"]] : null;
   let userID = req.session["user_id"];
-  let templateVars = { 
-    urls: urlsForUser(urlDatabase,userID), //show the user the links that are tied to the userID
+  if (user) {
+    let templateVars = { 
+    urls: urlsForUser(urlDatabase, userID), //show the user the links that are tied to the userID
     user: users[userID],
-   };
-  res.render("urls_index", templateVars);//header has access to index, so what we want in header has to be passed here
-});
+  };
+    res.render("urls_index", templateVars);//header has access to index, so what we want in header has to be passed here
+  } else {
+    let templateVars = { 
+      urls: null, 
+      user: users[userID],
+     };
+     res.render("urls_index", templateVars);
+    }
+  });
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString(6); 
   urlDatabase[shortURL] = {longURL: req.body.longURL, userID: req.session["user_id"]}; 
@@ -72,13 +94,12 @@ app.post("/urls", (req, res) => {
 
 //CREATE NEW URL
 app.get("/urls/new", (req, res) => {
-  const user_Id = req.session["user_id"];
-  if (user_Id === null || user_Id === undefined) {
+  const user = users[req.session["user_id"]] ? users[req.session["user_id"]] : null;
+  if (user === null || user === undefined) {
     res.redirect("/login");//if user is not logged in, should not be able to create new shortURL
   } else {
-  const fetchedUser = fetchUserById(users, user_Id);
   let templateVars = {
-    user: fetchedUser,
+    user: users[req.session["user_id"]]
   };
   res.render("urls_new", templateVars);
 }
@@ -103,7 +124,7 @@ app.get("/urls/:shortURL", (req, res) => {
 app.post("/urls/:shortURL", (req,res) => {
   const user = users[req.session["user_id"]] ? users[req.session["user_id"]] : null;
   if (user) {
-    let longURL = req.body.updatedLongURL;
+    let longURL = req.body.updatedLongURL
     urlDatabase[req.params.shortURL].longURL = longURL;
     res.redirect("/urls");
   } else {
@@ -111,9 +132,9 @@ app.post("/urls/:shortURL", (req,res) => {
   }
 });
 
-//NOT SURE
+//REDIRECT shortURL to origin longURL page
 app.get("/u/:shortURL", (req, res) => { //anyone can visit shorURL
-  const longURL = req.params.shortURL.longURL;
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -168,9 +189,8 @@ app.get("/register", (req, res) => {
 
 //REGISTER
 app.post("/register", (req, res) => {
-  let id = generateRandomString(12);
   const {email, password} = req.body;
-  
+  let Uid = generateRandomString(12);
   if(req.body.email === "") {
     return res.status('400').send('<html><h4>Please enter email</h4></html>');
    } 
@@ -180,12 +200,12 @@ app.post("/register", (req, res) => {
   const fetchedUser = fetchUserByEmail(users, email);//shall return the userobj or null
   if (!fetchedUser) {
      const newUser = {
-     id,
+     id: Uid,
      email,
      password: bcrypt.hashSync(password, saltRounds)
      }
-      users[id] = newUser;
-      req.session["user_id"] = id;
+      users[Uid] = newUser;
+      req.session["user_id"] = Uid;
       res.redirect("/urls");
     } else {
       res.status('400').send('<html><h4>User exists, please log in</h4></html>');

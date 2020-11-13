@@ -1,13 +1,7 @@
 const bcrypt = require('bcrypt');
-//HELPER FUNCTION
-const fetchUserById = (db, userId) => {
-  for (let user in db) {
-    if (db[user].id == userId) {
-      return db[user];
-    }
-  }
-  return null;
-}
+
+
+
 
 //HELPER FUNCTION
 const fetchUserByEmail = (db, email) => {
@@ -32,15 +26,8 @@ function generateRandomString(length) { //from stackoverflow
 }
 
 //HELPER FUNCTION
-const urlsForUser = (urlDatabase, id) => {
-  let userUrls = {};
-  for (let key in urlDatabase) {
-    if (urlDatabase[key]["userID"] === id) {
-      userUrls[key] = urlDatabase[key];
-    }
-  }
-  return userUrls;
-}
+
+
 //HELPER FUNCTION
 const emailPasswordCheck = (email, password, db) => {
   let answer = {check: false, user: ""};
@@ -52,5 +39,5 @@ const emailPasswordCheck = (email, password, db) => {
   }
   return answer;
 }
-
-module.exports = {fetchUserById, fetchUserByEmail, generateRandomString, urlsForUser, emailPasswordCheck};
+//urlsForUser
+module.exports = {fetchUserByEmail, generateRandomString, emailPasswordCheck};
