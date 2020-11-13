@@ -83,7 +83,7 @@ app.post("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const user = users[req.session["user_id"]] ? users[req.session["user_id"]] : null;
   if (user === null || user === undefined) {
-    res.redirect("/login");//if user is not logged in, should not be able to create new shortURL
+    res.redirect("/login");
   } else {
   let templateVars = {
     user: users[req.session["user_id"]]
@@ -120,7 +120,7 @@ app.post("/urls/:shortURL", (req,res) => {
 });
 
 //REDIRECT shortURL to origin longURL page
-app.get("/u/:shortURL", (req, res) => { //anyone can visit shorURL
+app.get("/u/:shortURL", (req, res) => { 
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
