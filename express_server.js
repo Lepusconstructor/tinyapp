@@ -54,7 +54,7 @@ const users = {
 }
 
 const urlDatabase = {
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "user2RandomID" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
@@ -62,16 +62,31 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
-//pass URL data to template urls_index.js using res.render
+const urlsForUser = (urlDatabase, id) => {
+  let userUrls = {};
+  for (let key in urlDatabase) {
+    if (urlDatabase[key]["userID"] === id) {
+      userUrls[key] = urlDatabase[key];
+    }
+  }
+  return userUrls;
+}
+//show the user the links that are tied to the userID
 app.get("/urls", (req, res) => {
-    const templateVars = { 
-    urls: urlDatabase,
-    user: users[req.cookies["user_id"]]? users[req.cookies["user_id"]].email : undefined
+  let userID = req.cookies["user_id"];
+  let templateVars = { 
+    urls: urlsForUser(urlDatabase,userID),
+    user: users[userID],
    };
-  res.render("urls_index", templateVars);//header has access to index
-
+  res.render("urls_index", templateVars);
+  //header has access to index
 });
-
+app.post("/urls", (req, res) => {
+  const shortURL = generateRandomString(6); //generate a unique 6 digits string for shortURL
+  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: req.cookies["user_id"]}; //assign the shortURL to longURL to save the pair to urlDB
+  //res.redirect("/urls/:" + shortURL);
+  res.redirect(`/urls/${shortURL}`);
+});
 /*
 //a GET route to render the urls_new.ejs template (given below) in the browser, to present the form to the user
 app.get("/urls/new", (req, res) => {
@@ -89,8 +104,8 @@ app.get("/urls/new", (req, res) => {
     res.redirect("/login");
   } else {
   const fetchedUser = fetchUserById(users, user_Id);
-  const templateVars = {
-    user: fetchedUser.email,
+  let templateVars = {
+    user: fetchedUser,
   };
   res.render("urls_new", templateVars);
 }
@@ -99,11 +114,15 @@ app.get("/urls/new", (req, res) => {
 
 
 app.get("/urls/:shortURL", (req, res) => {
+  
+  let shortURL = req.params.shortURL;//.substring(1)
+  console.log(shortURL);
   const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL].longURL,
-    user: users[req.cookies["user_id"]].email 
+    shortURL: shortURL,
+    longURL: urlDatabase[shortURL].longURL,
+    user: users[req.cookies["user_id"]] 
   }; 
+  
   res.render("urls_show", templateVars);
 });
 
@@ -115,19 +134,10 @@ app.post("/urls/:shortURL", (req,res)=>{
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
-  delete urlDatabase[shortURL].longURL;
+  delete urlDatabase[shortURL];
   res.redirect("/urls");
 });
 
-app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString(6); //generate a unique 6 digits string for shortURL
-  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: res.cookie("user_id")}; //assign the shortURL to longURL to save the pair to urlDB
-  console.log(shortURL);
-  res.redirect("/urls/" + shortURL);
-});
-
-//after the browser receives a redirection res, it GET req to the url in the res.
-//The GET /urls/new route needs to be defined before the GET /urls/:id route. Routes defined earlier will take precedence, so if we place this route after the /urls/:id definition, any calls to /urls/new will be handled by app.get("/urls/:id", ...) because Express will think that new is a route parameter. A good rule of thumb to follow is that routes should be ordered from most specific to least specific.
 
 app.get("/u/:shortURL", (req, res) => { //anyone can visit shorURL
   const longURL = req.params.shortURL.longURL;
